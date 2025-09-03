@@ -1,8 +1,10 @@
-# pypgoutput
+# pgoutput-reader
 
-Python package to read, parse and convert PostgreSQL logical decoding messages to change data capture messages. Built using psycopg2's logical replication support objects, PostgreSQL's pgoutput plugin and Pydantic.
+This is a single file version of [dgea005/pypgoutput: PostgreSQL CDC library using pgoutput and python](https://github.com/dgea005/pypgoutput), with better cli usage support.
 
-Uses python >= 3.8
+Single Python file to read, parse and convert PostgreSQL logical decoding messages to change data capture messages. Built using psycopg2's logical replication support objects, PostgreSQL's pgoutput plugin.
+
+Uses python >= 3.7
 
 Developed on PostgreSQL 12 for now.
 
@@ -10,16 +12,12 @@ Developed on PostgreSQL 12 for now.
 
 ## Installation
 
-```console
-$ pip install pypgoutput
-```
+Just copy file `pgoutputreader.py`, and make sure python venv have [psycopg2](https://www.psycopg.org/docs/) installed.
 
 ## How it works
 
-* Replication messages are consumed via psycopg2's replication connection. <https://www.psycopg.org/docs/extras.html#replication-support-objects>
-* The binary messages from pgoutput logical decoding are parsed in the `decoders.py` module.
-* Parsed messages are converted to change events and yieled from the `LogicalReplicationReader`
-* Change events are nested Pydantic models where the tuple data (before/after) schema is dynamically generated depending on the table being processed.
+See https://github.com/dgea005/pypgoutput for details.
+
 
 ## Example
 
@@ -32,30 +30,8 @@ SELECT * FROM pg_create_logical_replication_slot('test_slot', 'pgoutput');
 
 Second, run the script to collect the changes:
 
-```py
-import os
-import pypgoutput
-
-HOST = os.environ.get("PGHOST")
-PORT = os.environ.get("PGPORT")
-DATABASE_NAME = os.environ.get("PGDATABASE")
-USER = os.environ.get("PGUSER")
-PASSWORD = os.environ.get("PGPASSWORD")
-
-
-cdc_reader = pypgoutput.LogicalReplicationReader(
-                publication_name="test_pub",
-                slot_name="test_slot",
-                host=HOST,
-                database=DATABASE_NAME,
-                port=PORT,
-                user=USER,
-                password=PASSWORD,
-            )
-for message in cdc_reader:
-    print(message.json(indent=2))
-
-cdc_reader.stop()
+```shell
+python pgoutputreader.py --host $PGHOST --port $PGPORT --database $PGDATABASE --user $PGUSER --password $PGPASSWORD --slot test_slot
 ```
 
 Generate some change messages
